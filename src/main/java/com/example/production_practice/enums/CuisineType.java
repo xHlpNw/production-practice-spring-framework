@@ -6,6 +6,8 @@ public enum CuisineType {
     CHINESE ("китайская"),
     AMERICAN ("американская"),
     RUSSIAN ("русская"),
+    FRENCH ("французская"),
+    JAPANESE ("японская"),
     MEXICAN ("мексиканская");
 
     private final String title;

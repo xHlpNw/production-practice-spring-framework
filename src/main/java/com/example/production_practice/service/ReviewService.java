@@ -47,7 +47,7 @@ public class ReviewService {
         if (!reviews.isEmpty()) {
             long sum = reviews.stream().mapToLong(Review::getScore).sum();
             average = BigDecimal.valueOf(sum)
-                    .divide(BigDecimal.valueOf(reviews.size()), 3, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(reviews.size()), 1, RoundingMode.HALF_UP);
         } else {
             average = BigDecimal.ZERO;
         }
