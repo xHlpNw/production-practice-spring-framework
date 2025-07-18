@@ -4,6 +4,7 @@ package com.example.production_practice.repository;
 //●	Класс для работы с данными о посетителях, методы: save, remove, findAll.То есть класс, который сохраняет
 //нового посетителя в наш список, удаляет оттуда его и находит все записи, остальные классы аналогично.
 
+import com.example.production_practice.entity.Review;
 import com.example.production_practice.entity.Visitor;
 import org.springframework.stereotype.Repository;
 
@@ -24,5 +25,11 @@ public class VisitorRepository {
 
     public List<Visitor> findAll() {
         return List.copyOf(visitors);
+    }
+
+    public Visitor findById(Long id) {
+        return visitors.stream()
+                .filter(v -> v.getId().equals(id))
+                .findFirst().orElse(null);
     }
 }

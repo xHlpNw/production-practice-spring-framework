@@ -26,9 +26,9 @@ public class ReviewRepository {
         return List.copyOf(reviews);
     }
 
-    public Optional<Review> findById(Long visitorId, Long restaurantId) {
+    public Review findById(Long visitorId, Long restaurantId) {
         return reviews.stream()
                 .filter(r -> r.getVisitorId().equals(visitorId) && r.getRestaurantId().equals(restaurantId))
-                .findFirst();
+                .findFirst().orElse(null);
     }
 }
