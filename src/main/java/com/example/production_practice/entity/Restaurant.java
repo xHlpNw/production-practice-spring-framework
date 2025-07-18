@@ -6,6 +6,7 @@ package com.example.production_practice.entity;
 
 
 import com.example.production_practice.enums.CuisineType;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NonNull;
@@ -15,20 +16,20 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 public class Restaurant {
-    @NonNull
+    @NotNull
     private Long id;
 
-    @NonNull
+    @NotNull
     private String name;
 
     private String description;
 
-    @NonNull
+    @NotNull
     private CuisineType cuisineType;
 
-    @NonNull
+    @NotNull
     private BigDecimal averageCheck;
 
-    @NonNull
+    @NotNull
     private BigDecimal rating;
 }

@@ -4,7 +4,11 @@ package com.example.production_practice.service;
 //  ●	Класс для работы с данными об оценках, методы: save, remove, findAll
 //        Не забудьте, что после добавления оценки и сохранения её необходимо пересчитать среднюю оценку ресторана.
 
+import com.example.production_practice.dto.ReviewRequestDTO;
+import com.example.production_practice.dto.ReviewResponseDTO;
 import com.example.production_practice.entity.Review;
+import com.example.production_practice.entity.Visitor;
+import com.example.production_practice.mapper.ReviewMapper;
 import com.example.production_practice.repository.RestaurantRepository;
 import com.example.production_practice.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,29 +18,34 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final RestaurantRepository restaurantRepository;
+    private final ReviewMapper reviewMapper;
 
-    public void save(Review review) {
+    public void save(Long visitorId, Long restaurantId, ReviewRequestDTO reviewDTO) {
+        Review review = reviewMapper.toEntity(reviewDTO, visitorId, restaurantId);
         reviewRepository.save(review);
-        recalculateRating(review.getRestaurantId());
+        recalculateRating(restaurantId);
     }
 
-    public void remove(Review review) {
-        reviewRepository.remove(review);
-        recalculateRating(review.getRestaurantId());
+    public void remove(Long visitorId, Long restaurantId) {
+        reviewRepository.remove(reviewRepository.findById(visitorId, restaurantId));
+        recalculateRating(restaurantId);
     }
 
-    public List<Review> findAll() {
-        return reviewRepository.findAll();
+    public List<ReviewResponseDTO> findAll() {
+        return reviewRepository.findAll().stream()
+                .map(reviewMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Review> findById(Long visitorId, Long restaurantId) {
-        return reviewRepository.findById(visitorId, restaurantId);
+    public ReviewResponseDTO findById(Long visitorId, Long restaurantId) {
+        return reviewMapper.toResponseDTO(reviewRepository.findById(visitorId, restaurantId));
     }
 
     private void recalculateRating(Long restaurantId) {
@@ -55,5 +64,11 @@ public class ReviewService {
                 .filter(r -> r.getId().equals(restaurantId))
                 .findFirst()
                 .ifPresent(r -> r.setRating(average));
+    }
+
+    public void update(Long visitorId, Long restaurantId, ReviewRequestDTO review) {
+        Review oldReview = reviewRepository.findById(visitorId, restaurantId);
+        oldReview.setComment(review.getComment());
+        oldReview.setScore(review.getScore());
     }
 }
