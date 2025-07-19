@@ -6,30 +6,42 @@ package com.example.production_practice.entity;
 
 
 import com.example.production_practice.enums.CuisineType;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+@Entity
+@Table(name = "restaurant")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Restaurant {
-    @NotNull
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @Column(nullable = false)
     private String name;
 
     private String description;
 
-    @NotNull
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private CuisineType cuisineType;
 
-    @NotNull
+    @Column(nullable = false)
     private BigDecimal averageCheck;
 
-    @NotNull
     private BigDecimal rating;
+
+    @OneToMany(mappedBy = "restaurant", fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<Review> reviews = new ArrayList<>();
 }

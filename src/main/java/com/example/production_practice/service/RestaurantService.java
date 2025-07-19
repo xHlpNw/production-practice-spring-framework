@@ -10,6 +10,8 @@ import com.example.production_practice.entity.Visitor;
 import com.example.production_practice.mapper.RestaurantMapper;
 import com.example.production_practice.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,18 +24,14 @@ public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final RestaurantMapper restaurantMapper;
 
-    Long COUNT_RESTAURANT = 0L;
-
     public void save(RestaurantRequestDTO restaurantDTO) {
-        Restaurant restaurant = restaurantMapper.toEntity(restaurantDTO);
-        restaurant.setId(++COUNT_RESTAURANT);
-        restaurantRepository.save(restaurant);
+        restaurantRepository.save(restaurantMapper.toEntity(restaurantDTO));
     }
 
     public void remove(Long id) {
-        Restaurant restaurant = restaurantRepository.findAll()
-                .stream().filter(r -> r.getId() == id).findFirst().orElse(null);
-        if (restaurant != null) restaurantRepository.remove(restaurant);
+        Restaurant restaurant = restaurantRepository.findById(id).orElseThrow();
+        restaurant.getReviews().clear();
+        restaurantRepository.deleteById(id);
     }
 
     public List<RestaurantResponseDTO> findAll() {
@@ -43,14 +41,19 @@ public class RestaurantService {
     }
 
     public RestaurantResponseDTO findById(Long id) {
-        return restaurantMapper.toResponseDTO(restaurantRepository.findById(id));
+        return restaurantMapper.toResponseDTO(restaurantRepository.findById(id).orElse(null));
     }
 
     public void update(Long id, RestaurantRequestDTO restaurantDTO) {
-        Restaurant oldRestaurant = restaurantRepository.findById(id);
-        oldRestaurant.setName(restaurantDTO.getName());
-        oldRestaurant.setDescription(restaurantDTO.getDescription());
-        oldRestaurant.setAverageCheck(new BigDecimal(restaurantDTO.getAverageCheck()));
-        oldRestaurant.setCuisineType(restaurantMapper.mapCuisineType(restaurantDTO.getCuisineType()));
+        Restaurant restaurant = restaurantRepository.findById(id).orElseThrow();
+        restaurant.setName(restaurantDTO.getName());
+        restaurant.setDescription(restaurantDTO.getDescription());
+        restaurant.setAverageCheck(new BigDecimal(restaurantDTO.getAverageCheck()));
+        restaurant.setCuisineType(restaurantMapper.mapCuisineType(restaurantDTO.getCuisineType()));
+        restaurantRepository.save(restaurant);
+    }
+
+    public Page<RestaurantResponseDTO> findByRating(BigDecimal rating, Pageable page) {
+        return restaurantRepository.findByRating(rating, page).map(restaurantMapper::toResponseDTO);
     }
 }

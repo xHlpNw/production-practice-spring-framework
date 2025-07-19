@@ -8,10 +8,12 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
+    @Mapping(target = "id", expression = "java(new ReviewID(dto.getVisitorId(), dto.getRestaurantId()))")
+    @Mapping(target = "visitor", ignore = true)  // или можешь настроить, если нужно
+    @Mapping(target = "restaurant", ignore = true)
+    Review toEntity(ReviewRequestDTO dto);
 
-    @Mapping(target = "visitorId", source = "visitorId")
-    @Mapping(target = "restaurantId", source = "restaurantId")
-    Review toEntity(ReviewRequestDTO dto, Long visitorId, Long restaurantId);
-
+    @Mapping(source = "id.visitorId", target = "visitorId")
+    @Mapping(source = "id.restaurantId", target = "restaurantId")
     ReviewResponseDTO toResponseDTO(Review entity);
 }

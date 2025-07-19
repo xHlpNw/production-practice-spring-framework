@@ -16,8 +16,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +31,7 @@ import java.util.stream.Collectors;
 public class RestaurantController {
     private final RestaurantService restaurantService;
 
-    public RestaurantController(RestaurantService restaurantService, RestaurantMapper restaurantMapper) {
+    public RestaurantController(RestaurantService restaurantService) {
         this.restaurantService = restaurantService;
     }
 
@@ -34,7 +39,7 @@ public class RestaurantController {
     @ApiResponse(
             responseCode = "200",
             description = "Успешно получен список ресторанов",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = VisitorResponseDTO.class)))
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = RestaurantResponseDTO.class)))
     )
     @GetMapping
     public List<RestaurantResponseDTO> getAllRestaurants() {
@@ -44,7 +49,7 @@ public class RestaurantController {
     @Operation(summary = "Получить ресторан по ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Ресторан найден",
-                    content = @Content(schema = @Schema(implementation = VisitorResponseDTO.class))),
+                    content = @Content(schema = @Schema(implementation = RestaurantResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "Ресторан не найден")
     })
     @GetMapping("/{id}")
@@ -103,5 +108,18 @@ public class RestaurantController {
             @Parameter(description = "id ресторана", example = "1")
             @PathVariable Long id) {
         restaurantService.remove(id);
+    }
+
+    @GetMapping("/by-rating")
+    public Page<RestaurantResponseDTO> getRestaurantsByRating(
+            @RequestParam BigDecimal minRating,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "rating") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return restaurantService.findByRating(minRating, pageable);
     }
 }

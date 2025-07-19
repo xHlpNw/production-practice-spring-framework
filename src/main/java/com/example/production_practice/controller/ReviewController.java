@@ -16,6 +16,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +31,35 @@ public class ReviewController {
 
     public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
+    }
+
+    @GetMapping("/page")
+    public Page<ReviewResponseDTO> getAllPageable(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return reviewService.findAllPageable(page, size);
+    }
+
+    @GetMapping("/by-restaurant/{restaurantId}")
+    public Page<ReviewResponseDTO> getReviewsByRestaurant(
+            @PathVariable Long restaurantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "score") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return reviewService.findAllByRestaurantId(restaurantId, pageable);
+    }
+
+    @GetMapping("/sorted")
+    public Page<ReviewResponseDTO> getAllPageableAndSorted(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return reviewService.findAllPageableAndSorting(page, size);
     }
 
     @Operation(summary = "Получить список всех отзывов")
@@ -63,19 +96,13 @@ public class ReviewController {
     })
     @PostMapping
     public void addReview(
-            @Parameter(description = "ID посетителя", example = "1")
-            @Valid @RequestBody Long visitorId,
-
-            @Parameter(description = "ID ресторана", example = "1")
-            @Valid @RequestBody Long restaurantId,
-
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Данные нового ресторана",
+                    description = "Данные нового отзыва",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = RestaurantRequestDTO.class))
+                    content = @Content(schema = @Schema(implementation = ReviewRequestDTO.class))
             )
             @Valid @RequestBody ReviewRequestDTO reviewDTO) {
-        reviewService.save(visitorId, restaurantId, reviewDTO);
+        reviewService.save(reviewDTO);
     }
 
     @Operation(
@@ -89,19 +116,13 @@ public class ReviewController {
     })
     @PutMapping("/{visitorId}/{restaurantId}")
     public void updateReview(
-            @Parameter(description = "ID посетителя", example = "1")
-            @PathVariable Long visitorId,
-
-            @Parameter(description = "ID ресторана", example = "1")
-            @PathVariable Long restaurantId,
-
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Данные для обновления отзыва",
                     required = true,
                     content = @Content(schema = @Schema(implementation = ReviewRequestDTO.class))
             )
             @Valid @RequestBody ReviewRequestDTO review) {
-        reviewService.update(visitorId, restaurantId, review);
+        reviewService.update(review);
     }
 
     @Operation(summary = "Удалить отзыв по id посетителя и id ресторана")

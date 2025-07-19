@@ -1,34 +1,22 @@
 package com.example.production_practice.repository;
 
-//В каждом классе хранить данные в приватном финальном поле типа List, все методы работают именно с этим полем.
-//●	Класс для работы с данными о ресторанах, методы: save, remove, findAll
-
 import com.example.production_practice.entity.Restaurant;
 import com.example.production_practice.entity.Visitor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Repository
-public class RestaurantRepository {
-    private final List<Restaurant> restaurants = new ArrayList<>();
+public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
+    @Query("SELECT r FROM Restaurant r WHERE r.rating >= :minRating")
+    Page<Restaurant> findByRating(BigDecimal minRating, Pageable pageable);
 
-    public void save(Restaurant restaurant) {
-        restaurants.add(restaurant);
-    }
-
-    public void remove(Restaurant restaurant) {
-        restaurants.remove(restaurant);
-    }
-
-    public List<Restaurant> findAll() {
-        return List.copyOf(restaurants);
-    }
-
-    public Restaurant findById(Long id) {
-        return restaurants.stream()
-                .filter(r -> r.getId().equals(id))
-                .findFirst().orElse(null);
-    }
+    Page<Restaurant> findByRatingGreaterThan(BigDecimal minRating, Pageable pageable);
 }
