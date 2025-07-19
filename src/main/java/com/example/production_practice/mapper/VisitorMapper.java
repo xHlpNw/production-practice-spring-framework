@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface VisitorMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "reviews", ignore = true)
     Visitor toEntity(VisitorRequestDTO dto);
 
     VisitorResponseDTO toResponseDTO(Visitor entity);

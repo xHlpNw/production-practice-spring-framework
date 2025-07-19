@@ -12,7 +12,8 @@ public interface RestaurantMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cuisineType", expression = "java(mapCuisineType(dto.getCuisineType()))")
     @Mapping(target = "averageCheck", expression = "java(new BigDecimal(dto.getAverageCheck()))")
-    @Mapping(target = "rating", constant = "0") // начальный рейтинг
+    @Mapping(target = "rating", constant = "0")
+    @Mapping(target = "reviews", ignore = true)
     Restaurant toEntity(RestaurantRequestDTO dto);
 
     RestaurantResponseDTO toResponseDTO(Restaurant entity);

@@ -13,6 +13,14 @@ import lombok.Value;
 @Value
 @Schema(description = "DTO запроса на создание/обновление отзыва")
 public class ReviewRequestDTO {
+    @Schema(description = "ID посетителя", example = "1")
+    @NotNull
+    Long visitorId;
+
+    @NotNull
+    @Schema(description = "ID ресторана", example = "1")
+    Long restaurantId;
+
     @NotNull
     @Schema(description = "Оценка", example = "5")
     @Min(1)
