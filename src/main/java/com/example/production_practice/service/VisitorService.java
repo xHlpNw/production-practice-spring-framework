@@ -1,19 +1,16 @@
 package com.example.production_practice.service;
 
-//Слой бизнес логики (сервисы). В каждый класс внедрить соответствующий(-ие) репозиторий(-ии).
-//  ●	Класс для работы с данными о посетителях, методы: save, remove, findAll
-
 import com.example.production_practice.dto.VisitorRequestDTO;
 import com.example.production_practice.dto.VisitorResponseDTO;
 import com.example.production_practice.entity.Restaurant;
-import com.example.production_practice.entity.Review;
 import com.example.production_practice.entity.Visitor;
 import com.example.production_practice.mapper.VisitorMapper;
 import com.example.production_practice.repository.RestaurantRepository;
 import com.example.production_practice.repository.ReviewRepository;
 import com.example.production_practice.repository.VisitorRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,12 +26,20 @@ public class VisitorService {
     private final ReviewRepository reviewRepository;
     private final VisitorMapper visitorMapper;
 
-    public void save(VisitorRequestDTO visitorDTO) {
-        visitorRepository.save(visitorMapper.toEntity(visitorDTO));
+    @Transactional
+    public VisitorResponseDTO save(VisitorRequestDTO visitorDTO) {
+        if (visitorDTO == null) {
+            throw new NullPointerException("VisitorRequestDTO is null");
+        }
+        Visitor visitor = visitorMapper.toEntity(visitorDTO);
+        visitorRepository.save(visitor);
+        return visitorMapper.toResponseDTO(visitor);
     }
 
+    @Transactional
     public void remove(Long id) {
-        Visitor visitor = visitorRepository.findById(id).orElseThrow();
+        Visitor visitor = visitorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Посетитель не найден"));
         List<Long> restaurantIdList = visitor.getReviews().stream()
                 .map(r -> r.getId().getRestaurantId()).toList();
         visitor.getReviews().clear();
@@ -52,26 +57,28 @@ public class VisitorService {
     }
 
     public VisitorResponseDTO findById(Long id) {
-        return visitorMapper.toResponseDTO(visitorRepository.findById(id).orElse(null));
+        return visitorMapper.toResponseDTO(visitorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Посетитель не найден")));
     }
 
+    @Transactional
     public void update(Long id, VisitorRequestDTO visitorDTO) {
-        Visitor visitor = visitorRepository.findById(id).orElseThrow();
+        Visitor visitor = visitorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Посетитель не найден"));
         visitor.setAge(visitorDTO.getAge());
         visitor.setName(visitorDTO.getName());
         visitor.setGender(visitorDTO.getGender());
         visitorRepository.save(visitor);
     }
 
-    private void recalculateRestaurantRating(Restaurant restaurant){
-        BigDecimal score = BigDecimal.ZERO;
-        if (!restaurant.getReviews().isEmpty()) {
-            score = restaurant.getReviews().stream()
-                    .map(r -> BigDecimal.valueOf(r.getScore()))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .divide(BigDecimal.valueOf(restaurant.getReviews().size()), 1, RoundingMode.HALF_UP);
+    private void recalculateRestaurantRating(Restaurant restaurant) {
+        BigDecimal averageScore = reviewRepository.findAverageScoreByRestaurantId(restaurant.getId());
+        if (averageScore == null) {
+            averageScore = BigDecimal.ZERO;
+        } else {
+            averageScore = averageScore.setScale(1, RoundingMode.HALF_UP);
         }
-        restaurant.setRating(score);
+        restaurant.setRating(averageScore);
         restaurantRepository.save(restaurant);
     }
 }

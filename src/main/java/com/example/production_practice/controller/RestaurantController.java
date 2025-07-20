@@ -2,13 +2,7 @@ package com.example.production_practice.controller;
 
 import com.example.production_practice.dto.RestaurantRequestDTO;
 import com.example.production_practice.dto.RestaurantResponseDTO;
-import com.example.production_practice.dto.VisitorRequestDTO;
-import com.example.production_practice.dto.VisitorResponseDTO;
-import com.example.production_practice.entity.Restaurant;
-import com.example.production_practice.entity.Visitor;
-import com.example.production_practice.mapper.RestaurantMapper;
 import com.example.production_practice.service.RestaurantService;
-import com.example.production_practice.service.VisitorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -16,15 +10,18 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/restaurants")
@@ -65,14 +62,15 @@ public class RestaurantController {
             @ApiResponse(responseCode = "400", description = "Некорректные входные данные")
     })
     @PostMapping
-    public void addRestaurant(
+    public ResponseEntity<RestaurantResponseDTO> addRestaurant(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Данные нового ресторана",
                     required = true,
                     content = @Content(schema = @Schema(implementation = RestaurantRequestDTO.class))
             )
-            @RequestBody RestaurantRequestDTO restaurantDTO) {
-        restaurantService.save(restaurantDTO);
+            @Valid @RequestBody RestaurantRequestDTO restaurantDTO) {
+        RestaurantResponseDTO dto = restaurantService.save(restaurantDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @Operation(
@@ -94,7 +92,7 @@ public class RestaurantController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = RestaurantRequestDTO.class))
             )
-            @RequestBody RestaurantRequestDTO restaurantDTO) {
+            @Valid @RequestBody RestaurantRequestDTO restaurantDTO) {
         restaurantService.update(id, restaurantDTO);
     }
 
@@ -112,7 +110,7 @@ public class RestaurantController {
 
     @GetMapping("/by-rating")
     public Page<RestaurantResponseDTO> getRestaurantsByRating(
-            @RequestParam BigDecimal minRating,
+            @RequestParam @PositiveOrZero BigDecimal minRating,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "rating") String sortBy,

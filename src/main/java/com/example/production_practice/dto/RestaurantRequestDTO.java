@@ -9,8 +9,6 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-@AllArgsConstructor
-@Getter
 @Value
 @Schema(description = "DTO запроса на создание/обновление ресторана")
 public class RestaurantRequestDTO {
@@ -21,11 +19,12 @@ public class RestaurantRequestDTO {
     @Schema(description = "Описание ресторана (может быть пустым)")
     String description;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "Тип кухни", example = "ITALIAN")
-    String cuisineType;
+    CuisineType cuisineType;
 
-    @NotBlank
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = false)
     @Schema(description = "Средний чек на человека", example = "1500.00")
-    String averageCheck;
+    BigDecimal averageCheck;
 }

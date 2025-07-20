@@ -1,22 +1,7 @@
 package com.example.production_practice;
 
-import com.example.production_practice.dto.RestaurantResponseDTO;
-import com.example.production_practice.entity.Restaurant;
-import com.example.production_practice.entity.Review;
-import com.example.production_practice.entity.ReviewID;
-import com.example.production_practice.entity.Visitor;
-import com.example.production_practice.repository.RestaurantRepository;
-import com.example.production_practice.repository.ReviewRepository;
-import com.example.production_practice.repository.VisitorRepository;
-import com.example.production_practice.service.RestaurantService;
-import com.example.production_practice.service.ReviewService;
-import com.example.production_practice.service.VisitorService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.stereotype.Component;
-import java.util.Optional;
 
 @SpringBootApplication
 public class ProductionPracticeApplication {
@@ -25,15 +10,15 @@ public class ProductionPracticeApplication {
 		SpringApplication.run(ProductionPracticeApplication.class, args);
 	}
 
-	@Component
-	@RequiredArgsConstructor
-	static class TestRunner implements CommandLineRunner {
-		private final VisitorRepository visitorRepository;
-		private final RestaurantRepository restaurantRepository;
-		private final ReviewRepository reviewRepository;
-
-		@Override
-		public void run(String[] args) {
+//	@Component
+//	@RequiredArgsConstructor
+//	static class TestRunner implements CommandLineRunner {
+//		private final VisitorRepository visitorRepository;
+//		private final RestaurantRepository restaurantRepository;
+//		private final ReviewRepository reviewRepository;
+//
+//		@Override
+//		public void run(String[] args) {
 //			System.out.println("Посетители:");
 //			for (Visitor visitor : visitorRepository.findAll()) System.out.println(visitor);
 //
@@ -68,7 +53,7 @@ public class ProductionPracticeApplication {
 //					restaurantName,
 //                    review + "/5 - " + review.getComment()
 //			);
-		}
-	}
+//		}
+//	}
 
 }

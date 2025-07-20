@@ -12,6 +12,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 @RequiredArgsConstructor
 public class Initializer {
@@ -30,14 +32,14 @@ public class Initializer {
         restaurantService.save(new RestaurantRequestDTO(
                 "Claude Monet",
                 "Ресторан авторской французской кухни",
-                CuisineType.FRENCH.name(),
-                "4000"
+                CuisineType.FRENCH,
+                new BigDecimal("4000")
         ));
         restaurantService.save(new RestaurantRequestDTO(
                 "Wok'n'Roll",
                 null,
-                CuisineType.JAPANESE.name(),
-                "1450"
+                CuisineType.JAPANESE,
+                new BigDecimal("1450")
         ));
 
         // Добавляем отзывы через сервис, чтобы рейтинг пересчиталcя
