@@ -1,13 +1,9 @@
 package com.example.production_practice.controller;
 
-import com.example.production_practice.dto.RestaurantRequestDTO;
 import com.example.production_practice.dto.ReviewRequestDTO;
 import com.example.production_practice.dto.ReviewResponseDTO;
 import com.example.production_practice.dto.VisitorResponseDTO;
-import com.example.production_practice.entity.Review;
-import com.example.production_practice.entity.Visitor;
 import com.example.production_practice.service.ReviewService;
-import com.example.production_practice.service.VisitorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -20,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -95,14 +93,15 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "Некорректные входные данные")
     })
     @PostMapping
-    public void addReview(
+    public ResponseEntity<ReviewResponseDTO> addReview(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Данные нового отзыва",
                     required = true,
                     content = @Content(schema = @Schema(implementation = ReviewRequestDTO.class))
             )
             @Valid @RequestBody ReviewRequestDTO reviewDTO) {
-        reviewService.save(reviewDTO);
+        ReviewResponseDTO dto = reviewService.save(reviewDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @Operation(

@@ -1,9 +1,5 @@
 package com.example.production_practice.service;
 
-//Слой бизнес логики (сервисы). В каждый класс внедрить соответствующий(-ие) репозиторий(-ии).
-//  ●	Класс для работы с данными об оценках, методы: save, remove, findAll
-//        Не забудьте, что после добавления оценки и сохранения её необходимо пересчитать среднюю оценку ресторана.
-
 import com.example.production_practice.dto.ReviewRequestDTO;
 import com.example.production_practice.dto.ReviewResponseDTO;
 import com.example.production_practice.entity.Restaurant;
@@ -14,14 +10,16 @@ import com.example.production_practice.mapper.ReviewMapper;
 import com.example.production_practice.repository.RestaurantRepository;
 import com.example.production_practice.repository.ReviewRepository;
 import com.example.production_practice.repository.VisitorRepository;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,9 +34,13 @@ public class ReviewService {
     private final VisitorRepository visitorRepository;
     private final ReviewMapper reviewMapper;
 
-    public void save(ReviewRequestDTO reviewDTO) {
+    @Transactional
+    public ReviewResponseDTO save(ReviewRequestDTO reviewDTO) {
         if (reviewRepository.existsById(new ReviewID(reviewDTO.getVisitorId(), reviewDTO.getRestaurantId()))) {
-            throw new EntityExistsException("Review already exists for visitor " + reviewDTO.getVisitorId() + " and restaurant " + reviewDTO.getRestaurantId());
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Отзыв уже существует для посетителя " + reviewDTO.getVisitorId() + " и ресторана " + reviewDTO.getRestaurantId()
+            );
         }
         Visitor visitor = visitorRepository.findById(reviewDTO.getVisitorId())
                 .orElseThrow(() -> new EntityNotFoundException("Visitor not found"));
@@ -54,9 +56,17 @@ public class ReviewService {
 
         reviewRepository.save(review);
         recalculateRestaurantRating(review.getRestaurant());
+        return reviewMapper.toResponseDTO(review);
     }
 
+    @Transactional
     public void remove(Long visitorId, Long restaurantId) {
+        if (!reviewRepository.existsById(new ReviewID(visitorId, restaurantId))) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Отзыв не найден для посетителя " + visitorId + " и ресторана " + restaurantId
+            );
+        }
         reviewRepository.deleteById(new ReviewID(visitorId, restaurantId));
         Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow();
         recalculateRestaurantRating(restaurant);
@@ -73,18 +83,17 @@ public class ReviewService {
     }
 
     private void recalculateRestaurantRating(Restaurant restaurant) {
-        List<Review> reviews = reviewRepository.findAllByIdRestaurantId(restaurant.getId());
-        BigDecimal score = BigDecimal.ZERO;
-        if (!reviews.isEmpty()) {
-            score = reviews.stream()
-                    .map(review -> BigDecimal.valueOf(review.getScore()))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .divide(BigDecimal.valueOf(reviews.size()), 1, RoundingMode.HALF_UP);
+        BigDecimal averageScore = reviewRepository.findAverageScoreByRestaurantId(restaurant.getId());
+        if (averageScore == null) {
+            averageScore = BigDecimal.ZERO;
+        } else {
+            averageScore = averageScore.setScale(1, RoundingMode.HALF_UP);
         }
-        restaurant.setRating(score);
+        restaurant.setRating(averageScore);
         restaurantRepository.save(restaurant);
     }
 
+    @Transactional
     public void update(ReviewRequestDTO reviewDTO) {
         ReviewID reviewId = new ReviewID(reviewDTO.getVisitorId(), reviewDTO.getRestaurantId());
 
@@ -99,7 +108,9 @@ public class ReviewService {
 
     public List<ReviewResponseDTO> findAllSorting(){
         List<Review> reviews = reviewRepository.findAll(Sort.by("score").descending());
-        return reviews.stream().map(reviewMapper::toResponseDTO).toList();
+        return reviews.stream()
+                .map(reviewMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     public Page<ReviewResponseDTO> findAllPageable(int page, int size) {

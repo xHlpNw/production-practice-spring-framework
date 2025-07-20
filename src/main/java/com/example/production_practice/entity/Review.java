@@ -1,13 +1,12 @@
 package com.example.production_practice.entity;
 
-//  Класс с оценками посетителей с полями id посетителя, id ресторана, оценка (int), текст отзыва (может быть пустым).
-
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @Entity
 @Table(name = "review")
@@ -19,6 +18,9 @@ public class Review {
     private ReviewID id;
 
     @Column(nullable = false)
+    @NotNull
+    @Min(1)
+    @Max(5)
     private Integer score;
 
     private String comment;
@@ -28,7 +30,7 @@ public class Review {
     @MapsId("visitorId")
     private Visitor visitor;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
     @MapsId("restaurantId")
     private Restaurant restaurant;

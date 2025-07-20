@@ -7,18 +7,16 @@ import com.example.production_practice.enums.CuisineType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", imports = {CuisineType.class})
+import java.math.BigDecimal;
+
+@Mapper(componentModel = "spring", imports = {CuisineType.class, BigDecimal.class})
 public interface RestaurantMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cuisineType", expression = "java(mapCuisineType(dto.getCuisineType()))")
-    @Mapping(target = "averageCheck", expression = "java(new BigDecimal(dto.getAverageCheck()))")
+    @Mapping(target = "averageCheck", source = "averageCheck")
     @Mapping(target = "rating", constant = "0")
     @Mapping(target = "reviews", ignore = true)
     Restaurant toEntity(RestaurantRequestDTO dto);
 
     RestaurantResponseDTO toResponseDTO(Restaurant entity);
 
-    default CuisineType mapCuisineType(String type) {
-        return CuisineType.valueOf(type.toUpperCase());
-    }
 }
